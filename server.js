@@ -122,6 +122,10 @@ app.get("/categories", (req, res) => {
     });
 });
 
+app.get('/posts/add',function(req,res) {
+  res.sendFile(path.join(__dirname+'/views/addPost.html'));
+});
+
 app.post("/posts/add", upload.single("featureImage"), (req, res) => {
   let streamUpload = (req) => {
     return new Promise((resolve, reject) => {
