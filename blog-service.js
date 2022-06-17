@@ -1,6 +1,9 @@
 const fs = require("fs");
 var posts = [];
 var categories = [];
+var postByCategory = [];
+var postByMinDate = [];
+var postById = [];
 
 module.exports.initialize = function () {
   return new Promise(function (resolve, reject) {
@@ -23,13 +26,14 @@ module.exports.initialize = function () {
 };
 
 module.exports.getAllPosts = () => {
-  return new promise((resolve, reject) => {
-    if (posts.length() == 0) {
-      reject("no results returned");
-    } else {
-      resolve(posts);
-    }
-  });
+  return new Promise((resolve, reject) => {
+    if(posts.length === 0) {
+     var err = "no results returned" 
+     reject({message: err}) 
+    }  
+
+     resolve(posts) 
+ })
 };
 
 module.exports.getPublishedPosts = () => {
@@ -51,11 +55,72 @@ module.exports.getPublishedPosts = () => {
 };
 
 module.exports.getCategories = () => {
-  return new promise((resolve, reject) => {
-    if (categories.length == 0) {
-      reject("no results returned");
-    } else {
-      resolve(categories);
+
+  return new Promise((resolve, reject) => {
+      if(categories.length === 0) {
+       var err = "no results returned" 
+       reject({message: err}) 
+      }  
+
+   resolve (categories) 
+   })
+   return promise 
+} 
+
+
+module.exports.addPost = (postData) => {
+  return new Promise((resolve, reject) => {
+    postData.published = postData.published ? true : false;
+    postData.id = posts.length + 1;
+    posts.push(postData);
+
+    if (posts.length == 0) {
+      var err = "no results returned";
+      reject({ message: err });
     }
+    resolve(postData);
+  });
+};
+
+module.exports.getPostByCategory = (category) => {
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < posts.length; i++) {
+      if (posts[i].category == category) postByCategory.push(posts[i]);
+    }
+    if (postByCategory.length === 0) {
+      let err = "no results returned";
+      reject({ message: err });
+    }
+
+    resolve(postByCategory);
+  });
+};
+
+module.exports.getPostByMinDate = (minDateStr) => {
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < posts.length; i++) {
+      if (new Date(posts[i].postDate) >= new Date(minDateStr))
+        postByMinDate.push(posts[i]);
+    }
+    if (postByMinDate.length === 0) {
+      let err = "no results returned";
+      reject({ message: err });
+    }
+
+    resolve(postByMinDate);
+  });
+};
+
+module.exports.getPostById = (id) => {
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < posts.length; i++) {
+      if (posts[i].id == id) postById.push(posts[i]);
+    }
+    if (postById.length === 0) {
+      let err = "no results returned";
+      reject({ message: err });
+    }
+
+    resolve(postById);
   });
 };
