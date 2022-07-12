@@ -27,13 +27,13 @@ module.exports.initialize = function () {
 
 module.exports.getAllPosts = () => {
   return new Promise((resolve, reject) => {
-    if(posts.length === 0) {
-     var err = "no results returned" 
-     reject({message: err}) 
-    }  
+    if (posts.length === 0) {
+      var err = "no results returned";
+      reject({ message: err });
+    }
 
-     resolve(posts) 
- })
+    resolve(posts);
+  });
 };
 
 module.exports.getPublishedPosts = () => {
@@ -55,23 +55,27 @@ module.exports.getPublishedPosts = () => {
 };
 
 module.exports.getCategories = () => {
-
   return new Promise((resolve, reject) => {
-      if(categories.length === 0) {
-       var err = "no results returned" 
-       reject({message: err}) 
-      }  
+    if (categories.length === 0) {
+      var err = "no results returned";
+      reject({ message: err });
+    }
 
-   resolve (categories) 
-   })
-   return promise 
-} 
-
+    resolve(categories);
+  });
+  return promise;
+};
 
 module.exports.addPost = (postData) => {
   return new Promise((resolve, reject) => {
+    let yourDate = new Date();
+    const offset = yourDate.getTimezoneOffset();
+    yourDate = new Date(yourDate.getTime() - offset * 60 * 1000);
+
     postData.published = postData.published ? true : false;
     postData.id = posts.length + 1;
+    postData.postDate = yourDate.toISOString().split("T")[0];
+
     posts.push(postData);
 
     if (posts.length == 0) {
@@ -113,14 +117,26 @@ module.exports.getPostByMinDate = (minDateStr) => {
 
 module.exports.getPostById = (id) => {
   return new Promise((resolve, reject) => {
-    for (let i = 0; i < posts.length; i++) {
-      if (posts[i].id == id) postById.push(posts[i]);
+    if (posts.length != 0) {
+      resolve(posts.filter((post) => post.id == Number(id)));
+    } else {
+      reject({ msg: "No Data" });
     }
-    if (postById.length === 0) {
+  });
+};
+
+module.exports.getPublishedPostsByCategory = (category) => {
+  let publishedPosts = [];
+  return new Promise((resolve, reject) => {
+    for (let i = 0; i < posts.length; i++) {
+      if (posts[i].category == category && posts[i].published == true)
+        publishedPosts.push(posts[i]);
+    }
+    if (publishedPosts.length === 0) {
       let err = "no results returned";
       reject({ message: err });
     }
 
-    resolve(postById);
+    resolve(publishedPosts);
   });
 };
