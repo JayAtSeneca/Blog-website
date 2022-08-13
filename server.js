@@ -1,5 +1,5 @@
 /*********************************************************************************
- * WEB322 – Assignment 05
+ * WEB322 – Assignment 06
  * I declare that this assignment is my own work in accordance with Seneca Academic Policy.
  * No part of this assignment has been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
  *
@@ -7,7 +7,7 @@
  * Student ID: 147268205
  * Date: 07-24-2022
  *
- * Online (Heroku) URL: https://obscure-bayou-03724.herokuapp.com/
+ * Online (Heroku) URL: https://tranquil-waters-01320.herokuapp.com/
  *
  * GitHub Repository URL: https://github.com/JayAtSeneca/web322-app
  *
@@ -16,12 +16,14 @@
 var express = require("express");
 var app = express();
 var blogService = require("./blog-service");
+var authData = require("./auth-service");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 const path = require("path");
 const exphbs = require("express-handlebars");
 const stripJs = require("strip-js");
+const clientSessions = require("client-sessions");
 
 var HTTP_PORT = process.env.PORT || 8080;
 
@@ -75,10 +77,28 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", ".hbs");
 app.set("views", "./views");
 
+app.use(
+  clientSessions({
+    cookieName: "session", // this is the object name that will be added to 'req'
+    secret: "assignment6_web322", // this should be a long un-guessable string.
+    duration: 2 * 60 * 1000, // duration of the session in milliseconds (2 minutes)
+    activeDuration: 1000 * 60, // the session will be extended by this many ms each request (1 minute)
+  })
+);
+
+app.use(function (req, res, next) {
+  res.locals.session = req.session;
+  next();
+});
+
 const upload = multer();
 
-function onHttpStart() {
-  console.log("Express http server listening on port: " + HTTP_PORT);
+function ensureLogin(req, res, next) {
+  if (!req.session.user) {
+    res.redirect("/login");
+  } else {
+    next();
+  }
 }
 
 app.use(express.static("public"));
@@ -101,6 +121,45 @@ app.get("/", (req, res) => {
 
 app.get("/about", (req, res) => {
   res.render("about");
+});
+
+app.get("/login", (req, res) => {
+  res.render('login');
+});
+
+app.post("/login", (req, res) => {
+  req.body.userAgent = req.get('User-Agent');
+  authData.checkUser(req.body).then((user) => {
+      req.session.user = {
+          userName: user.userName,
+          email: user.email,
+          loginHistory: user.loginHistory
+      };
+      res.redirect('/posts');
+  }).catch((err) => {
+      res.render('login', {errorMessage: err, userName: req.body.userName});
+  });
+});
+
+app.get("/register", (req, res) => {
+  res.render('register');
+});
+
+app.post("/register", (req, res) => {
+  authData.registerUser(req.body).then(() => {
+      res.render('register', {successMessage: "User created"});
+  }).catch((err) => {
+      res.render('register', {errorMessage: err, userName: req.body.userName});
+  });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.reset();
+  res.redirect('/');
+});
+
+app.get("/userHistory", ensureLogin, (req, res) => {
+  res.render('userHistory');
 });
 
 app.get("/blog", async (req, res) => {
@@ -196,7 +255,7 @@ app.get("/blog/:id", async (req, res) => {
   res.render("blog", { data: viewData });
 });
 
-app.get("/posts", (req, res) => {
+app.get("/posts", ensureLogin, (req, res) => {
   if (req.query.category) {
     blogService
       .getPostsByCategory(req.query.category)
@@ -228,7 +287,7 @@ app.get("/posts", (req, res) => {
   }
 });
 
-app.get("/post/:id", (req, res) => {
+app.get("/post/:id", ensureLogin, (req, res) => {
   blogService
     .getPostById(req.params.id)
     .then((data) => {
@@ -241,7 +300,7 @@ app.get("/post/:id", (req, res) => {
     });
 });
 
-app.get("/categories", (req, res) => {
+app.get("/categories", ensureLogin, (req, res) => {
   blogService
     .getCategories()
     .then((categories) => {
@@ -258,11 +317,11 @@ app.get("/categories", (req, res) => {
     });
 });
 
-app.get("/categories/add", (req, res) => {
+app.get("/categories/add", ensureLogin, (req, res) => {
   res.render("addCategory");
 });
 
-app.post("/categories/add", (req, res) => {
+app.post("/categories/add", ensureLogin, (req, res) => {
   blogService
     .addCategory(req.body)
     .then(() => {
@@ -271,7 +330,7 @@ app.post("/categories/add", (req, res) => {
     .catch(console.log("Unable to Add category"));
 });
 
-app.get("/categories/delete/:id", (req, res) => {
+app.get("/categories/delete/:id", ensureLogin, (req, res) => {
   blogService
     .deleteCategoryById(req.params.id)
     .then(() => {
@@ -280,7 +339,7 @@ app.get("/categories/delete/:id", (req, res) => {
     .catch(console.log("Unable to Remove Category / Category not found)"));
 });
 
-app.get("/posts/delete/:id", (req, res) => {
+app.get("/posts/delete/:id", ensureLogin, (req, res) => {
   blogService
     .deletePostById(req.params.id)
     .then(() => {
@@ -293,7 +352,7 @@ app.get("/posts/delete/:id", (req, res) => {
     });
 });
 
-app.get("/posts/add", function (req, res) {
+app.get("/posts/add", ensureLogin, function (req, res) {
   blogService
     .getCategories()
     .then((data) => {
@@ -306,47 +365,52 @@ app.get("/posts/add", function (req, res) {
     });
 });
 
-app.post("/posts/add", upload.single("featureImage"), (req, res) => {
-  if (req.file) {
-    let streamUpload = (req) => {
-      return new Promise((resolve, reject) => {
-        let stream = cloudinary.uploader.upload_stream((error, result) => {
-          if (result) {
-            resolve(result);
-          } else {
-            reject(error);
-          }
+app.post(
+  "/posts/add",
+  ensureLogin,
+  upload.single("featureImage"),
+  (req, res) => {
+    if (req.file) {
+      let streamUpload = (req) => {
+        return new Promise((resolve, reject) => {
+          let stream = cloudinary.uploader.upload_stream((error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          });
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
         });
-        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      };
+      async function upload(req) {
+        let result = await streamUpload(req);
+        console.log(result);
+        return result;
+      }
+      upload(req).then((uploaded) => {
+        processPost(uploaded.url);
       });
-    };
-    async function upload(req) {
-      let result = await streamUpload(req);
-      console.log(result);
-      return result;
+    } else {
+      processPost("https://dummyimage.com/847x320/d9d9d9/545454.jpg");
     }
-    upload(req).then((uploaded) => {
-      processPost(uploaded.url);
-    });
-  } else {
-    processPost("https://dummyimage.com/847x320/d9d9d9/545454.jpg");
-  }
 
-  function processPost(imageUrl) {
-    req.body.featureImage = imageUrl;
+    function processPost(imageUrl) {
+      req.body.featureImage = imageUrl;
 
-    // TODO: Process the req.body and add it as a new Blog Post before redirecting to /posts
-    console.log("server: ", req.body);
-    blogService
-      .addPost(req.body)
-      .then(() => {
-        res.redirect("/posts");
-      })
-      .catch((error) => {
-        res.status(500).send(error);
-      });
+      // TODO: Process the req.body and add it as a new Blog Post before redirecting to /posts
+      console.log("server: ", req.body);
+      blogService
+        .addPost(req.body)
+        .then(() => {
+          res.redirect("/posts");
+        })
+        .catch((error) => {
+          res.status(500).send(error);
+        });
+    }
   }
-});
+);
 
 app.use((req, res) => {
   res.status(404).render("404");
@@ -355,10 +419,12 @@ app.use((req, res) => {
 console.log("Ready for initialize");
 blogService
   .initialize()
-  .then(() => {
-    console.log("starting the server");
-    app.listen(HTTP_PORT, onHttpStart);
+  .then(authData.initialize)
+  .then(function () {
+    app.listen(HTTP_PORT, function () {
+      console.log("app listening on: " + HTTP_PORT);
+    });
   })
-  .catch((err) => {
-    console.log("ERROR MESSAGE:", err.message);
+  .catch(function (err) {
+    console.log("unable to start server: " + err);
   });

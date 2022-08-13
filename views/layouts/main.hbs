@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <!-- Latest compiled and minified Bootstrap 3.4.1 CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <link rel="stylesheet" href="/css/main.css" />
 
     <title>Jay Chaudhari's Blog</title>
@@ -25,7 +26,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <span class="navbar-brand" href="#">WEB322 - Jay Pravinkumar Chaudhari</span>
+          <span class="navbar-brand"> <a href="/" style="color: white;"> WEB322 - Jay Pravinkumar Chaudhari </a></span>
         </div>
 
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -35,9 +36,41 @@
             {{#navLink "/about"}}About{{/navLink}}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            {{#navLink "/posts"}}Posts{{/navLink}}
-            {{#navLink "/categories"}}Categories{{/navLink}}
-            {{!-- {{#navLink "/posts/add"}}Add Post{{/navLink}} --}}
+            {{#if session.user}}
+              <form class="navbar-form navbar-right">
+                <div class="dropdown">
+                  <button
+                    class="btn btn-primary dropdown-toggle"
+                    type="button"
+                    id="userMenu"
+                    data-toggle="dropdown"
+                  >
+                    <span
+                      class="glyphicon glyphicon-user"
+                    ></span>&nbsp;&nbsp;{{session.user.userName}}&nbsp;&nbsp;<span
+                      class="caret"
+                    ></span>
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="userMenu">
+                    <li><a href="/userHistory">User History</a></li>
+                    <li><a href="/logout">Log Out</a></li>
+                  </ul>
+                </div>
+              </form>
+              <ul class="nav navbar-nav navbar-right">
+                {{#navLink "/posts"}}Posts{{/navLink}}
+                {{#navLink "/categories"}}Categories{{/navLink}}
+              </ul>
+            {{else}}
+              <form class="navbar-form navbar-right">
+                <a href="/register" class="btn btn-success"><span
+                    class="glyphicon glyphicon-cog"
+                  ></span>&nbsp;&nbsp;Register</a>
+                <a href="/login" class="btn btn-primary"><span
+                    class="glyphicon glyphicon-chevron-right"
+                  ></span>&nbsp;&nbsp;Log In</a>
+              </form>
+            {{/if}}
           </ul>
         </div>
         <!-- /.navbar-collapse -->
