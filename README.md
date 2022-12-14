@@ -1,2 +1,2 @@
-# web322-app
+# Blog-website
 current-status: assignment 6
