@@ -1,19 +1,5 @@
-/*********************************************************************************
- * WEB322 – Assignment 06
- * I declare that this assignment is my own work in accordance with Seneca Academic Policy.
- * No part of this assignment has been copied manually or electronically from any other source (including 3rd party web sites) or distributed to other students.
- *
- * Name: Jay Pravinkumar Chaudhari
- * Student ID: 147268205
- * Date: 07-24-2022
- *
- * Online (Heroku) URL: https://tranquil-waters-01320.herokuapp.com/
- *
- * GitHub Repository URL: https://github.com/JayAtSeneca/web322-app
- *
- ********************************************************************************/
-
 var express = require("express");
+require('dotenv').config()
 var app = express();
 var blogService = require("./blog-service");
 var authData = require("./auth-service");
@@ -427,4 +413,5 @@ blogService
   })
   .catch(function (err) {
     console.log("unable to start server: " + err);
+    console.log(err);
   });

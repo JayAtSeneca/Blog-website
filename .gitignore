@@ -1,3 +1,4 @@
 /node_modules
 /date.js
 /credentials.txt
+/.env
