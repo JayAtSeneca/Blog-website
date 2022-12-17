@@ -29,6 +29,6 @@
 
 **Sequelize** is an ORM (Object-Relational Mapping) library that allows you to interact with a database using JavaScript. It provides a simple and easy-to-use interface for creating, reading, updating, and deleting data in a database.
 
-**Mongoose** is an ORM for MongoDB that provides a simple and flexible interface for working with data in a MongoDB database.
+**Mongoose** is an Object Data Modeling (ODM) for MongoDB that provides a simple and flexible interface for working with data in a MongoDB database.
 
 **Cloudinary** is a cloud-based image and video management platform that allows you to easily upload, store, and deliver images and videos on your website. It provides a range of features such as image optimization, transformation, and manipulation.
