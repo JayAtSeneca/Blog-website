@@ -14,9 +14,9 @@ const clientSessions = require("client-sessions");
 var HTTP_PORT = process.env.PORT || 8080;
 
 cloudinary.config({
-  cloud_name: "dltn1ghdm",
-  api_key: "884661395299724",
-  api_secret: "8ZDycm8695UflqV_kEC0D26s-3k",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
   secure: true,
 });
 
@@ -371,7 +371,7 @@ app.post(
       };
       async function upload(req) {
         let result = await streamUpload(req);
-        console.log(result);
+        //console.log(result);
         return result;
       }
       upload(req).then((uploaded) => {
@@ -385,7 +385,7 @@ app.post(
       req.body.featureImage = imageUrl;
 
       // TODO: Process the req.body and add it as a new Blog Post before redirecting to /posts
-      console.log("server: ", req.body);
+      //console.log("server: ", req.body);
       blogService
         .addPost(req.body)
         .then(() => {
